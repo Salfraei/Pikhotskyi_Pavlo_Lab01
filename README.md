@@ -89,6 +89,6 @@ Pikhotskyi_Pavlo_Lab01/
 
 ## Author
 
-Student: Піхоцький Павло  
-Group: ФеП-31  
+Student: Pavlo Pihotskay  
+Group: Fep-31  
 Variant: 15
