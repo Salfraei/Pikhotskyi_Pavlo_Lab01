@@ -1,24 +1,20 @@
-# Python environment and generated files
 .venv/
+venv/
 __pycache__/
 *.py[cod]
+*.egg-info/
 .pytest_cache/
 .mypy_cache/
-.ruff_cache/
-*.egg-info/
-build/
-dist/
 .coverage
 htmlcov/
-
-# Local machine, VS Code and secrets
-.vscode/
-.idea/
-.env
-.env.*
-!.env.example
-*.log
-
-# System
+*.prof
+*.pstats
+*.db
+*.sqlite3
+*.sqlite
+results/htmlcov/
+data/generated/
+results/lab05_benchmark/
+*.tmp
 .DS_Store
-Thumbs.db
+.vscode/

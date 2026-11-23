@@ -1,32 +1,62 @@
-"""Типізовані моделі даних консольної програми."""
-
+"""Variant 15 data models: results of scientific experiments."""
+from __future__ import annotations
 from dataclasses import dataclass
+from datetime import date as Date
 from math import isfinite
 
-
 @dataclass(frozen=True, slots=True)
-class Student:
-    """Студент та його середній бал за шкалою від 0 до 100."""
-
-    first_name: str
-    last_name: str
-    group: str
-    average_grade: float
+class Researcher:
+    researcher_id: int
+    name: str
 
     def __post_init__(self) -> None:
-        for field in ("first_name", "last_name", "group"):
-            value = getattr(self, field)
-            if not isinstance(value, str) or not value.strip():
-                raise ValueError(f"Поле {field} не може бути порожнім")
-            object.__setattr__(self, field, value.strip())
+        if not isinstance(self.researcher_id, int) or isinstance(self.researcher_id, bool) or self.researcher_id <= 0:
+            raise ValueError("researcher_id must be positive")
+        if not isinstance(self.name, str) or not self.name.strip():
+            raise ValueError("researcher name is required")
+        object.__setattr__(self, "name", self.name.strip())
 
-        if not isinstance(self.average_grade, (int, float)):
-            raise ValueError("Середній бал має бути числом")
-        if not isfinite(self.average_grade) or not 0 <= self.average_grade <= 100:
-            raise ValueError("Середній бал повинен бути в межах 0..100")
-        object.__setattr__(self, "average_grade", float(self.average_grade))
+@dataclass(frozen=True, slots=True)
+class Experiment:
+    experiment_id: int
+    name: str
+    researcher: str
+    parameter: str
+    result: float
+    date: Date | str
+
+    def __post_init__(self) -> None:
+        if type(self.experiment_id) is not int or self.experiment_id <= 0:
+            raise ValueError("experiment_id must be a positive integer")
+        for field_name in ("name", "researcher", "parameter"):
+            value = getattr(self, field_name)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f"{field_name} must not be empty")
+            object.__setattr__(self, field_name, value.strip())
+        if type(self.result) not in (int, float) or not isfinite(self.result):
+            raise ValueError("result must be a finite number")
+        object.__setattr__(self, "result", float(self.result))
+        if isinstance(self.date, str):
+            try:
+                parsed = Date.fromisoformat(self.date)
+            except ValueError as error:
+                raise ValueError("date must be YYYY-MM-DD") from error
+            object.__setattr__(self, "date", parsed)
+        elif not isinstance(self.date, Date):
+            raise ValueError("date must be a date or YYYY-MM-DD string")
 
     @property
-    def full_name(self) -> str:
-        """Повернути ім'я та прізвище для друку й пошуку."""
-        return f"{self.first_name} {self.last_name}"
+    def id(self) -> int:
+        return self.experiment_id
+
+    def to_dict(self) -> dict[str, object]:
+        return {"experiment_id": self.experiment_id, "name": self.name,
+                "researcher": self.researcher, "parameter": self.parameter,
+                "result": self.result, "date": self.date.isoformat()}
+
+@dataclass(frozen=True, slots=True)
+class ExperimentStatistics:
+    count: int
+    average: float | None
+    minimum: float | None
+    maximum: float | None

@@ -1,3 +1,3 @@
-"""Навчальний пакет з обліку студентів для лабораторної роботи №1."""
-
-__version__ = "0.1.0"
+"""Scientific experiment management, variant 15, Professional Python."""
+from student_manager.models import Experiment, Researcher, ExperimentStatistics
+__all__ = ["Experiment", "Researcher", "ExperimentStatistics"]
