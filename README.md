@@ -1,34 +1,94 @@
-# Професійний Python — ЛР №1, варіант №15
+# Experiment Manager
 
-**Піхоцький Павло, ФеП-31.** Тема: **Модульна структура Python-проєкту**.
+Laboratory project for the course "Professional Python".
 
-Це знімок одного наскрізного Python-проєкту з нарощенням функціональності лабораторних **№1–1**.
-Предметна область всіх модулів: **облік результатів наукових експериментів** (`experiment_id`, `name`, `researcher`, `parameter`, `result`, `date`).
+## Description
 
-## Структура
+Console application for recording scientific experiments and calculating experimental statistics.
+Individual variant: **15** — scientific experiment results.
 
-- `src/student_manager/models.py`, `services.py`, `main.py`, `readers.py` — спільний модуль із ЛР №1, варіант 15;
-- `src/student_manager/lab02/` … `lab01/` — завдання відповідних лабораторних (для №1 лише спільний модуль);
-- `data/` — вхідні CSV;
-- `tests/` — автоматичні тести;
-- `report/` — PDF-звіт для поточної лабораторної;
-- `pyproject.toml` — налаштування пакета.
+For each experiment, the program stores `experiment_id`, `name`, `researcher`, `parameter`, `result`, and `date`.
+It supports adding experiments, searching by researcher or ID, filtering by result range, and calculating average, minimum and maximum values.
 
-## Запуск у Windows (PowerShell / VS Code)
+## Requirements
+
+Python 3.11+
+
+## Installation
 
 ```powershell
-py -3 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
-.\.venv\Scripts\python.exe -m pytest -q
-.\.venv\Scripts\python -m student_manager.main
+python -m venv .venv
 ```
 
-Наберіть **`python -m student_manager.main`** у корені цієї папки після активації віртуального середовища.
+Activate the virtual environment (Windows PowerShell):
 
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
 
+Install the project in editable mode:
 
-## Дисципліна / методичка
+```powershell
+python -m pip install -e .
+```
 
-Методичні файли №3–9 прямо містять варіант 15. У наданих методичках №1–2 окреме завдання варіанта 15 **не надруковано** (наведено варіант 4); застосовано предметну область, підтверджену наступними методичками та повідомленням Laboratory Checker.
+## Run
 
-Локальні тести перевіряють код і вимоги, але не гарантують результат закритого зовнішнього перевіряча.
+```powershell
+python -m student_manager.main
+```
+
+or:
+
+```powershell
+student-manager
+```
+
+Example with a CSV input file and a researcher filter:
+
+```powershell
+python -m student_manager.main --input data/experiments_sample.csv --researcher Іваненко
+```
+
+## Project structure
+
+```text
+Pikhotskyi_Pavlo_Lab01/
+├── pyproject.toml
+├── README.md
+├── .gitignore
+├── src/
+│   └── student_manager/
+│       ├── __init__.py
+│       ├── main.py
+│       ├── models.py
+│       ├── services.py
+│       ├── analytics.py
+│       ├── readers.py
+│       └── repositories.py
+├── data/
+│   └── experiments_sample.csv
+├── tests/
+│   ├── test_services.py
+│   ├── test_common.py
+│   ├── test_analytics_root.py
+│   └── test_project_structure.py
+└── report/
+    └── Pikhotskyi_Pavlo_Lab01.pdf
+```
+
+`src/student_manager/models.py` — data models `Experiment`, `Researcher`, `ExperimentStatistics`.  
+`src/student_manager/services.py` — business logic, search, filtering, statistics.  
+`src/student_manager/main.py` — application entry point.  
+`src/student_manager/analytics.py` — additional statistics.  
+`src/student_manager/readers.py` — CSV import and JSON export.  
+`src/student_manager/repositories.py` — in-memory repository.  
+`tests/` — automated tests.  
+`data/` — sample scientific experiment data.  
+`report/` — laboratory report.
+
+## Author
+
+Student: Піхоцький Павло  
+Group: ФеП-31  
+Variant: 15

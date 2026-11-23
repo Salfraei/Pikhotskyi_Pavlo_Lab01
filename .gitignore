@@ -18,3 +18,8 @@ results/lab05_benchmark/
 *.tmp
 .DS_Store
 .vscode/
+
+.idea/
+dist/
+build/
+.env

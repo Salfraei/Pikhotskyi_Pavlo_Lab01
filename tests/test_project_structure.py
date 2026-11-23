@@ -14,6 +14,15 @@ def test_mandatory_directories():
     for name in ('src/student_manager','tests','data','report'):
         assert (root/name).is_dir()
 
-def test_previous_lab_modules_available():
-    for lab in range(2, 2):
-        assert importlib.import_module(f'student_manager.lab{lab:02}.main')
+def test_lab01_required_files_exist():
+    root = Path(__file__).resolve().parents[1]
+    required = (
+        'src/student_manager/__init__.py',
+        'src/student_manager/models.py',
+        'src/student_manager/services.py',
+        'src/student_manager/main.py',
+        'README.md',
+        '.gitignore',
+        'pyproject.toml',
+    )
+    assert all((root / name).is_file() for name in required)

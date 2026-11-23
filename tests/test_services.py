@@ -1,95 +1,72 @@
-"""Автоматичні перевірки бізнес-логіки без зовнішніх бібліотек."""
+"""Tests for laboratory 1 core business logic and command-line behavior."""
+from __future__ import annotations
 
-import unittest
+from pathlib import Path
 
-from student_manager.models import Student
+import pytest
+
+from student_manager.main import create_demo_experiments, print_experiments, run_demo
 from student_manager.services import (
-    DuplicateStudentError,
-    add_student,
-    calculate_group_average,
-    filter_by_group,
-    find_best_student,
-    find_students,
-    group_statistics,
-    sort_students,
+    calculate_statistics,
+    filter_by_result_range,
+    find_experiments_by_researcher,
 )
 
 
-class TestStudentModel(unittest.TestCase):
-    def test_full_name_and_trim(self) -> None:
-        student = Student(" Павло ", " Піхоцький ", " ФеП-31 ", 90)
-        self.assertEqual(student.full_name, "Павло Піхоцький")
-        self.assertEqual(student.group, "ФеП-31")
-
-    def test_empty_first_name_is_invalid(self) -> None:
-        with self.assertRaises(ValueError):
-            Student(" ", "Піхоцький", "ФеП-31", 88)
-
-    def test_grade_below_zero_is_invalid(self) -> None:
-        with self.assertRaises(ValueError):
-            Student("Павло", "Піхоцький", "ФеП-31", -1)
-
-    def test_grade_above_hundred_is_invalid(self) -> None:
-        with self.assertRaises(ValueError):
-            Student("Павло", "Піхоцький", "ФеП-31", 101)
-
-    def test_nan_grade_is_invalid(self) -> None:
-        with self.assertRaises(ValueError):
-            Student("Павло", "Піхоцький", "ФеП-31", float("nan"))
+def test_demo_contains_scientific_experiments() -> None:
+    experiments = create_demo_experiments()
+    assert len(experiments) == 4
+    assert experiments[0].parameter == "temperature"
 
 
-class TestStudentServices(unittest.TestCase):
-    def setUp(self) -> None:
-        self.students = [
-            Student("Павло", "Піхоцький", "ФеП-31", 92),
-            Student("Іван", "Мельник", "ФеП-31", 78),
-            Student("Марія", "Бондар", "ФеП-32", 95),
-        ]
-
-    def test_filter_by_group(self) -> None:
-        self.assertEqual(len(filter_by_group(self.students, "феп-31")), 2)
-
-    def test_calculate_group_average(self) -> None:
-        group = filter_by_group(self.students, "ФеП-31")
-        self.assertEqual(calculate_group_average(group), 85.0)
-
-    def test_empty_average(self) -> None:
-        self.assertEqual(calculate_group_average([]), 0.0)
-
-    def test_find_best_student(self) -> None:
-        self.assertEqual(find_best_student(self.students), self.students[2])
-
-    def test_best_student_empty(self) -> None:
-        self.assertIsNone(find_best_student([]))
-
-    def test_find_students_by_fragment(self) -> None:
-        self.assertEqual(find_students(self.students, "пІХ"), [self.students[0]])
-
-    def test_find_students_no_query(self) -> None:
-        self.assertEqual(find_students(self.students, "   "), [])
-
-    def test_sort_students_by_grade(self) -> None:
-        sorted_students = sort_students(self.students, by="grade", descending=True)
-        self.assertEqual([s.average_grade for s in sorted_students], [95.0, 92.0, 78.0])
-        self.assertEqual(self.students[0].average_grade, 92.0)
-
-    def test_sort_students_invalid_key(self) -> None:
-        with self.assertRaises(ValueError):
-            sort_students(self.students, by="unknown")  # type: ignore[arg-type]
-
-    def test_add_student(self) -> None:
-        add_student(self.students, Student("Олена", "Коваль", "ФеП-31", 89))
-        self.assertEqual(len(self.students), 4)
-
-    def test_duplicate_student(self) -> None:
-        with self.assertRaises(DuplicateStudentError):
-            add_student(self.students, Student("павло", "піхоцький", "феп-31", 82))
-
-    def test_group_statistics(self) -> None:
-        result = group_statistics(self.students)
-        self.assertEqual(result["ФеП-31"], (2, 85.0))
-        self.assertEqual(result["ФеП-32"], (1, 95.0))
+def test_find_researcher_variant_15() -> None:
+    experiments = create_demo_experiments()
+    found = find_experiments_by_researcher(experiments, "іваненко")
+    assert len(found) == 2
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_average_minimum_maximum() -> None:
+    statistics = calculate_statistics(create_demo_experiments())
+    assert statistics.count == 4
+    assert statistics.minimum == pytest.approx(4.95)
+    assert statistics.maximum == pytest.approx(101.5)
+
+
+def test_range_boundaries() -> None:
+    found = filter_by_result_range(create_demo_experiments(), 23.4, 25.2)
+    assert [item.experiment_id for item in found] == [1, 3]
+
+
+def test_empty_dataset_statistics() -> None:
+    statistics = calculate_statistics([])
+    assert statistics.count == 0
+    assert statistics.average is None
+
+
+def test_print_experiments(capsys: pytest.CaptureFixture[str]) -> None:
+    print_experiments(create_demo_experiments())
+    captured = capsys.readouterr().out
+    assert "Experiments:" in captured
+    assert "temperature=23.4" in captured
+
+
+def test_empty_csv_no_crash(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    input_file = tmp_path / "empty.csv"
+    input_file.write_text("experiment_id,name,researcher,parameter,result,date\n", encoding="utf-8")
+    run_demo(input_file)
+    output = capsys.readouterr().out
+    assert "Count=0" in output
+    assert "Average=N/A" in output
+
+
+def test_csv_with_records(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    input_file = tmp_path / "sample.csv"
+    input_file.write_text(
+        "experiment_id,name,researcher,parameter,result,date\n"
+        "101,Test,Oksana,temperature,12.5,2026-10-10\n",
+        encoding="utf-8",
+    )
+    run_demo(input_file, researcher="Oksana")
+    output = capsys.readouterr().out
+    assert "Count=1; Average=12.500" in output
+    assert "Researcher search: ['Test']" in output
